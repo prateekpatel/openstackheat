@@ -1,0 +1,6 @@
+parameters:
+  image: Ubuntu16_06
+  flavor: m1.small
+  private_net_id: 1ca4fd0f-06bd-4c0a-b007-e0f01212f8f1
+  private_subnet_id: 4cd74359-baae-4cb6-b711-84c6cc5d81b8
+  public_net_id: 8f9a4341-1f12-4148-86ee-24a948c9f44c

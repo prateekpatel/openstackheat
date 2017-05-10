@@ -1,0 +1,66 @@
+heat_template_version: 2016-04-08
+parameters:
+  key_name:
+    type: string
+    default: atmecs-demo-labs
+    description: default-key
+  flavor:
+    type: string
+    description: Instance type for the instance to be created
+    default: m1.small
+    constraints:
+      - allowed_values: [m1.nano, m1.tiny, m1.small, m1.large]
+        description: Value must be one of 'm1.tiny', 'm1.small' or 'm1.large'
+  image:
+    type: string
+    default: cirros
+    description: ID or name of the image to use for the instance
+  private_net_id:
+    type: string
+    description: Private network id
+  private_subnet_id:
+    type: string
+    description: Private subnet id
+  public_net_id:
+    type: string
+    description: Public network id
+
+resources:
+  instance1:
+    type: OS::Nova::Server
+    properties:
+      name: instance1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: instance1_port0 }
+      user_data: |
+        get_file: /root/java.sh
+        #!/bin/bash
+        #apt-get install -y git 2>&
+        #apt-get install -y apache2 2>&
+        #apt-get install -y lynx
+      user_data_format: RAW
+  
+
+  instance1_port0:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      security_groups:
+        - default
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+  instance1_public:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: instance1_port0 }
+outputs:
+  instance1_private_ip:
+    description: IP address of instance1 in private network
+    value: { get_attr: [ instance1, first_address ] }
+  instance1_public_ip:
+    description: Floating IP address of instance1 in public network
+    value: { get_attr: [ instance1_public, floating_ip_address ] }
