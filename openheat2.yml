@@ -1,0 +1,88 @@
+heat_template_version: 2016-04-08
+parameters:
+  key_name:
+    type: string
+    default: atmecs-demo-labs
+    description: default-key
+  flavor:
+    type: string
+    description: Instance type for the instance to be created
+    default: m1.small
+    constraints:
+      - allowed_values: [m1.nano, m1.tiny, m1.small, m1.large]
+        description: Value must be one of 'm1.tiny', 'm1.small' or 'm1.large'
+  image:
+    type: string
+    default: cirros
+    description: ID or name of the image to use for the instance
+  private_net_id:
+    type: string
+    default: 6bbf378e-f75d-410e-844e-210c2d37b419
+    description: Private network id
+  private_subnet_id:
+    type: string
+    default: 760a1f4e-7dd8-4fcf-82bf-7778e20695fc
+    description: Private subnet id
+  public_net_id:
+    type: string
+    description: Public network id
+    default: 8f9a4341-1f12-4148-86ee-24a948c9f44c
+
+resources:
+  instance1:
+    type: OS::Nova::Server
+    properties:
+      name: instance1
+      image: Finance
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: instance1_port0 }
+  instance2:
+    type: OS::Nova::Server
+    properties:
+      name: instance2
+      image: HR
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: instance2_port0 } 
+  
+
+  instance1_port0:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      security_groups:
+        - default
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+  instance1_public:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: instance1_port0 }
+
+  instance2_port0:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      security_groups:
+        - default
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+  instance2_public:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: instance2_port0 }
+#outputs:
+ # instance1_private_ip:
+  #  description: IP address of instance1 in private network
+   # value: { get_attr: [ instance1, first_address ] }
+  #instance1_public_ip:
+   # description: Floating IP address of instance1 in public network
+    #value: { get_attr: [ instance1_public, floating_ip_address ] }
+ # vnc_console_url:
+  #  value:
+   #   get_attr: [instance1, console_urls, novnc]
